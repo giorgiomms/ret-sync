@@ -54,7 +54,8 @@ PYTHON_MAJOR = sys.version_info[0]
 # location searched by the debugger for a configuration file
 CONFIG_LOCATIONS = [
     os.path.abspath(os.path.dirname(__file__)),
-    os.environ['HOME']]
+    os.path.expanduser('~')
+]
 
 # encoding settings (for data going in/out the plugin)
 RS_ENCODING = 'utf-8'
@@ -409,9 +410,12 @@ class Sync(gdb.Command):
         rs_log("%d commands added" % len(commands))
 
     def identity(self):
-        with tempfile.NamedTemporaryFile() as fd:
-            gdb.execute("shell uname -svm > %s" % fd.name)
-            id = open(fd.name, 'r').read()
+        tmp_file = tempfile.NamedTemporaryFile().name
+        gdb.execute("shell uname -svm > %s" % tmp_file)
+
+        with open(tmp_file, 'r') as fd:
+            id = fd.read()
+
         return id.strip()
 
     def ensure_maps_loaded(self):
